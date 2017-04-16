@@ -1,0 +1,16 @@
+[
+{
+  "modid": "offthemod",
+  "name": "Off! The Mod",
+  "description": "Spray off!",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["bafomdad"],
+  "credits": "The Modoff contest, for making this happen",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

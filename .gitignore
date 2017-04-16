@@ -1,0 +1,22 @@
+/bin
+build/
+eclipse/
+run/
+.idea/
+out/
+modoff.*
+modoff_Server.launch
+modoff_Client.launch
+.classpath
+gradle/
+.project
+.settings/org.eclipse.jdt.core.prefs
+CREDITS-fml.txt
+LICENSE-new.txt
+MinecraftForge-Credits.txt
+README.txt
+gradlew.bat
+gradlew
+forge-1.11.2-13.20.0.2263-changelog.txt
+Paulscode SoundSystem CodecIBXM License.txt
+Paulscode IBXM Library License.txt
