@@ -7,9 +7,9 @@ import net.minecraft.util.math.BlockPos;
 
 public class ItemSaver implements ISaveInfo {
 	
-	private BlockPos pos;
-	private ItemStack stack;
-	private int slot;
+	public BlockPos pos;
+	public ItemStack stack;
+	public int slot;
 	
 	public ItemSaver(BlockPos pos, ItemStack stack, int slot) {
 		
@@ -17,6 +17,8 @@ public class ItemSaver implements ISaveInfo {
 		this.stack = stack;
 		this.slot = slot;
 	}
+	
+	public ItemSaver() {}
 
 	@Override
 	public boolean contains(ISaveInfo info) {

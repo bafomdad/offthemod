@@ -7,14 +7,16 @@ import net.minecraft.util.math.BlockPos;
 
 public class TileSaver implements ISaveInfo {
 	
-	private BlockPos pos;
-	private NBTTagCompound nbt;
+	public BlockPos pos;
+	public NBTTagCompound nbt;
 	
 	public TileSaver(BlockPos pos, NBTTagCompound nbt) {
 		
 		this.pos = pos;
 		this.nbt = nbt;
 	}
+	
+	public TileSaver() {}
 
 	@Override
 	public boolean contains(ISaveInfo info) {

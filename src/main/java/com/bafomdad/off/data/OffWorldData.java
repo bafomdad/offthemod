@@ -1,6 +1,6 @@
 package com.bafomdad.off.data;
 
-import com.bafomdad.off.data.savers.ISaveInfo;
+import com.bafomdad.off.data.savers.*;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -29,12 +29,22 @@ public class OffWorldData extends WorldSavedData{
 
 		int[] dims = tag.getIntArray("dims");
 		
-		for (int d : dims) {
-			NBTTagList savedList = tag.getTagList("savedList" + d, 10);
-			OffHandler.INSTANCE.clearQueue(d);
+		for (int dimId : dims) {
+			NBTTagList savedList = tag.getTagList("savedList" + dimId, 10);
+			OffHandler.getInstance().clearQueue(dimId);
 			for (int i = 0; i < savedList.tagCount(); i++) {
 				NBTTagCompound saveTag = savedList.getCompoundTagAt(i);
-
+				BlockSaver bSaver = new BlockSaver();
+				if (bSaver.readNBT(saveTag) != null)
+					OffHandler.getInstance().addBlock(dimId, bSaver.pos, bSaver.state);
+				
+				ItemSaver iSaver = new ItemSaver();
+				if (iSaver.readNBT(saveTag) != null)
+					OffHandler.getInstance().addItem(dimId, iSaver.pos, iSaver.stack, iSaver.slot);
+				
+				TileSaver tSaver = new TileSaver();
+				if (tSaver.readNBT(saveTag) != null)
+					OffHandler.getInstance().addTile(dimId, tSaver.pos, tSaver.nbt);
 			}
 		}
 	}
@@ -42,7 +52,7 @@ public class OffWorldData extends WorldSavedData{
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound tag) {
 
-		Integer[] alldims = OffHandler.INSTANCE.getUnsavedDims().toArray(new Integer[0]);
+		Integer[] alldims = OffHandler.getInstance().getUnsavedDims().toArray(new Integer[0]);
 		int[] savedDims = new int[alldims.length];
 		for (int i = 0; i < alldims.length; i++)
 			savedDims[i] = alldims[i];
@@ -52,7 +62,7 @@ public class OffWorldData extends WorldSavedData{
 			World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(d);
 			if (world != null) {
 				NBTTagList savedList = new NBTTagList();
-				for (ISaveInfo info : OffHandler.INSTANCE.getAllInfo(world)) {
+				for (ISaveInfo info : OffHandler.getInstance().getAllInfo(world)) {
 					savedList.appendTag(info.writeNBT());
 				}
 				tag.setTag("savedList" + d, savedList);

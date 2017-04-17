@@ -7,14 +7,16 @@ import net.minecraft.util.math.BlockPos;
 
 public class BlockSaver implements ISaveInfo {
 	
-	private BlockPos pos;
-	private IBlockState state;
+	public BlockPos pos;
+	public IBlockState state;
 	
 	public BlockSaver(BlockPos pos, IBlockState state) {
 		
 		this.pos = pos;
 		this.state = state;
 	}
+	
+	public BlockSaver() {}
 
 	@Override
 	public boolean contains(ISaveInfo info) {
