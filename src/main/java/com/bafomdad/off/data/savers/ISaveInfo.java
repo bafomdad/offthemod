@@ -1,4 +1,4 @@
-package com.bafomdad.off.data;
+package com.bafomdad.off.data.savers;
 
 import net.minecraft.nbt.NBTTagCompound;
 
