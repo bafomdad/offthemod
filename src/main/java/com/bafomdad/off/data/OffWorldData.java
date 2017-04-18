@@ -10,7 +10,7 @@ import net.minecraft.world.WorldSavedData;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
-public class OffWorldData extends WorldSavedData{
+public class OffWorldData extends WorldSavedData {
 	
 	public static final String ID = "OffWorldData";
 
@@ -27,7 +27,7 @@ public class OffWorldData extends WorldSavedData{
 	@Override
 	public void readFromNBT(NBTTagCompound tag) {
 
-		int[] dims = tag.getIntArray("dims");
+		int[] dims = tag.getIntArray("savedDims");
 		
 		for (int dimId : dims) {
 			NBTTagList savedList = tag.getTagList("savedList" + dimId, 10);
@@ -35,16 +35,15 @@ public class OffWorldData extends WorldSavedData{
 			for (int i = 0; i < savedList.tagCount(); i++) {
 				NBTTagCompound saveTag = savedList.getCompoundTagAt(i);
 				BlockSaver bSaver = new BlockSaver();
-				if (bSaver.readNBT(saveTag) != null)
-					OffHandler.getInstance().addBlock(dimId, bSaver.pos, bSaver.state);
-				
+				if (bSaver.readNBT(saveTag) != null) {
+					bSaver = (BlockSaver)bSaver.readNBT(saveTag);
+					OffHandler.getInstance().addBlock(dimId, bSaver.pos, bSaver.state, bSaver.tiledata);
+				}
 				ItemSaver iSaver = new ItemSaver();
-				if (iSaver.readNBT(saveTag) != null)
+				if (iSaver.readNBT(saveTag) != null) {
+					iSaver = (ItemSaver)iSaver.readNBT(saveTag);
 					OffHandler.getInstance().addItem(dimId, iSaver.pos, iSaver.stack, iSaver.slot);
-				
-				TileSaver tSaver = new TileSaver();
-				if (tSaver.readNBT(saveTag) != null)
-					OffHandler.getInstance().addTile(dimId, tSaver.pos, tSaver.nbt);
+				}
 			}
 		}
 	}
@@ -57,7 +56,7 @@ public class OffWorldData extends WorldSavedData{
 		for (int i = 0; i < alldims.length; i++)
 			savedDims[i] = alldims[i];
 		
-		tag.setIntArray("savedList", savedDims);
+		tag.setIntArray("savedDims", savedDims);
 		for (int d : savedDims) {
 			World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(d);
 			if (world != null) {

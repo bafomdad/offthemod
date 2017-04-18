@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.bafomdad.off.data.savers.*;
+import com.bafomdad.off.items.ItemSprayCan;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -16,8 +17,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
+import net.minecraft.tileentity.TileEntityLockableLoot;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
 public class OffHandler {
 
@@ -48,10 +52,10 @@ public class OffHandler {
 			getSaveInfo(dimId).put(pos, Collections.newSetFromMap(new ConcurrentHashMap<ISaveInfo, Boolean>()));
 	}
 	
-	public void addBlock(int dimId, BlockPos pos, IBlockState state) {
+	public void addBlock(int dimId, BlockPos pos, IBlockState state, NBTTagCompound tag) {
 		
 		refresh(dimId, pos);
-		getSaveInfo(dimId).get(pos).add(new BlockSaver(pos, state));
+		getSaveInfo(dimId).get(pos).add(new BlockSaver(pos, state, tag));
 	}
 	
 	public void addItem(int dimId, BlockPos pos, ItemStack stack, int slot) {
@@ -60,56 +64,57 @@ public class OffHandler {
 		getSaveInfo(dimId).get(pos).add(new ItemSaver(pos, stack, slot));
 	}
 	
-	public void addTile(int dimId, BlockPos pos, NBTTagCompound tag) {
-		
-		refresh(dimId, pos);
-		getSaveInfo(dimId).get(pos).add(new TileSaver(pos, tag));
-	}
-	
 	public void handleErase(World world, BlockPos pos) {
 		
 		int dimId = world.provider.getDimension();
-		if (world.getBlockState(pos).getBlock() == Blocks.CHEST) {
+		if (ItemSprayCan.isVanillaInventory(world.getBlockState(pos).getBlock())) {
 			TileEntity tile = world.getTileEntity(pos);
-			if (tile != null && tile instanceof TileEntityChest) {
-				TileEntityChest chest = (TileEntityChest)tile;
-				for (int i = 0; i < chest.getSizeInventory(); i++) {
-					ItemStack loopstack = chest.getStackInSlot(i);
+			if (tile != null && tile instanceof TileEntityLockableLoot) {
+				TileEntityLockableLoot inv = (TileEntityLockableLoot)tile;
+				for (int i = 0; i < inv.getSizeInventory(); i++) {
+					ItemStack loopstack = inv.getStackInSlot(i);
 					if (!loopstack.isEmpty() && isModded(loopstack.getItem())) {
 						OffHandler.getInstance().addItem(dimId, pos, loopstack, i);
-						chest.setInventorySlotContents(i, ItemStack.EMPTY);
+						inv.setInventorySlotContents(i, ItemStack.EMPTY);
 					}
 				}
 			}
 			OffWorldData.getInstance(world.provider.getDimension()).setDirty(true);
 			return;
 		}
-		if (!isModded(world.getBlockState(pos).getBlock()))
+		if (world.isAirBlock(pos) || !isModded(world.getBlockState(pos).getBlock()))
 			return;
 		
 		else {
-			TileEntity modtile = world.getTileEntity(pos);
-			if (modtile != null) {
-				OffHandler.getInstance().addTile(dimId, pos, modtile.getTileData());
-//				world.removeTileEntity(pos);
+			TileEntity tile = world.getTileEntity(pos);
+			NBTTagCompound tileTag = null;
+			if (tile != null) {
+				tileTag = tile.writeToNBT(new NBTTagCompound());
+				world.removeTileEntity(pos);
 			}
-			OffHandler.getInstance().addBlock(dimId, pos, world.getBlockState(pos));
+			OffHandler.getInstance().addBlock(dimId, pos, world.getBlockState(pos), tileTag);
 			world.setBlockToAir(pos);
 			OffWorldData.getInstance(world.provider.getDimension()).setDirty(true);
 			return;
 		}
 	}
 	
-	public void restoreBlock() {
+	public void handleItemRestore(World world, BlockPos pos) {
 		
-	}
-	
-	public void restoreItem() {
-		
-	}
-	
-	public void restoreTile() {
-		
+		Set<ISaveInfo> savedInfo = getSavedInfo(world, pos);
+		if (savedInfo != null) {
+			for (ISaveInfo info: savedInfo) {
+				if (info instanceof ItemSaver) {
+					ItemSaver iSaver = (ItemSaver)info;
+					TileEntity tile = world.getTileEntity(pos);
+					if (tile != null && tile instanceof TileEntityLockableLoot) {
+						if (iSaver.slot < ((TileEntityLockableLoot)tile).getSizeInventory())
+							((TileEntityLockableLoot)tile).setInventorySlotContents(iSaver.slot, iSaver.stack);
+						clearSavedInfo(world, info);
+					}
+				}
+			}
+		}
 	}
 	
 	public void handleRestore(World world, BlockPos pos) {
@@ -117,13 +122,22 @@ public class OffHandler {
 		Set<ISaveInfo> savedInfo = getSavedInfo(world, pos);
 		if (savedInfo != null) {
 			for (ISaveInfo info: savedInfo) {
-				// TODO: actually restore stuff
-				Block block = world.getBlockState(pos).getBlock();
-				if (canReplace(block)) {
-					clearSavedInfo(world, info);
+				if (info instanceof BlockSaver) {
+					Block block = world.getBlockState(pos).getBlock();
+					BlockPos toPlace = null;
+					if (canReplace(block)) {
+						BlockSaver bSaver = (BlockSaver)info;
+						world.setBlockState(bSaver.pos, bSaver.state, 2);
+						if (bSaver.tiledata != null) {
+							TileEntity tile = TileEntity.create(world, bSaver.tiledata);
+							world.setTileEntity(bSaver.pos, tile);
+						}
+						clearSavedInfo(world, info);
+					}
+					else {
+						clearSavedInfo(world, info);
+					}
 				}
-				else
-					clearSavedInfo(world, info);
 			}
 		}
 		OffWorldData.getInstance(world.provider.getDimension()).setDirty(true);

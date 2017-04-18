@@ -6,6 +6,7 @@ import com.bafomdad.off.OffMain;
 import com.bafomdad.off.data.OffHandler;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockShulkerBox;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -119,6 +120,7 @@ public class ItemSprayCan extends Item {
     	if (rtr == null)
     		return;
     	
+// TODO: implement erasing entities. That'll never happen during modoff though :>
 //    	if (rtr.typeOfHit == RayTraceResult.Type.ENTITY)
 //    		System.out.println(rtr.entityHit);
     	
@@ -126,11 +128,23 @@ public class ItemSprayCan extends Item {
     		Random rand = new Random();
     		player.world.spawnParticle(EnumParticleTypes.CLOUD, rtr.getBlockPos().offset(rtr.sideHit).getX() + 0.1D + (rand.nextFloat() / 2), rtr.getBlockPos().offset(rtr.sideHit).getY() + 0.1D, rtr.getBlockPos().offset(rtr.sideHit).getZ() + 0.1D + (rand.nextFloat() / 2), 0, 0, 0);
     		if (!player.world.isRemote) {
-    			if (stack.getItemDamage() == 0)
+    			if (stack.getItemDamage() == 0) {
     				OffHandler.getInstance().handleErase(player.world, rtr.getBlockPos());
-    			if (stack.getItemDamage() == 1)
+    				return;
+    			}
+    			if (stack.getItemDamage() == 1) {
+    				if (isVanillaInventory(player.world.getBlockState(rtr.getBlockPos()).getBlock())) {
+    					OffHandler.getInstance().handleItemRestore(player.world, rtr.getBlockPos());
+    					return;
+    				}
     				OffHandler.getInstance().handleRestore(player.world, rtr.getBlockPos().offset(rtr.sideHit));
+    			}
     		}
     	}
+    }
+    
+    public static boolean isVanillaInventory(Block block) {
+    	
+    	return block == Blocks.DROPPER || block == Blocks.DISPENSER || block == Blocks.TRAPPED_CHEST || block == Blocks.CHEST || block == Blocks.HOPPER || block instanceof BlockShulkerBox;
     }
 }

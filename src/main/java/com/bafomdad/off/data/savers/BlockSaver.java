@@ -9,11 +9,13 @@ public class BlockSaver implements ISaveInfo {
 	
 	public BlockPos pos;
 	public IBlockState state;
+	public NBTTagCompound tiledata;
 	
-	public BlockSaver(BlockPos pos, IBlockState state) {
+	public BlockSaver(BlockPos pos, IBlockState state, NBTTagCompound tiledata) {
 		
 		this.pos = pos;
 		this.state = state;
+		this.tiledata = tiledata;
 	}
 	
 	public BlockSaver() {}
@@ -21,7 +23,7 @@ public class BlockSaver implements ISaveInfo {
 	@Override
 	public boolean contains(ISaveInfo info) {
 
-		if (!(info instanceof ISaveInfo))
+		if (!(info instanceof BlockSaver))
 			return false;
 		
 		boolean loc = pos.equals(((BlockSaver)info).pos);
@@ -36,6 +38,8 @@ public class BlockSaver implements ISaveInfo {
 		NBTTagCompound tag = new NBTTagCompound();
 		tag.setTag("coords", NBTUtil.createPosTag(pos));
 		NBTUtil.writeBlockState(tag, state);
+		if (tiledata != null)
+			tag.setTag("tile", tiledata);
 		
 		return tag;
 	}
@@ -48,9 +52,16 @@ public class BlockSaver implements ISaveInfo {
 		
 		BlockPos pos = NBTUtil.getPosFromTag(tag.getCompoundTag("coords"));
 		IBlockState state = NBTUtil.readBlockState(tag);
+		NBTTagCompound tiletag = tag.hasKey("tile") ? tag.getCompoundTag("tile") : null;
 		if (pos != null && state != null)
-			return new BlockSaver(pos, state);
+			return new BlockSaver(pos, state, tiletag);
 		
 		return null;
+	}
+	
+	@Override
+	public String toString() {
+		
+		return "BlockSaver: " + pos.toString() + " / " + state.toString();
 	}
 }

@@ -22,8 +22,15 @@ public class ItemSaver implements ISaveInfo {
 
 	@Override
 	public boolean contains(ISaveInfo info) {
-		// TODO Auto-generated method stub
-		return false;
+
+		if (!(info instanceof ItemSaver))
+			return false;
+		
+		boolean loc = pos.equals(((ItemSaver)info).pos);
+		boolean item = ItemStack.areItemStackTagsEqual(stack, ((ItemSaver)info).stack);
+		boolean slotIndex = ((ItemSaver)info).slot == slot;
+		
+		return loc && item && slotIndex;
 	}
 
 	@Override
@@ -56,4 +63,9 @@ public class ItemSaver implements ISaveInfo {
 		return null;
 	}
 
+	@Override
+	public String toString() {
+		
+		return "ItemSaver: " + pos.toString() + " / " + stack.toString() + " / " + slot;
+	}
 }
