@@ -101,14 +101,19 @@ public class OffHandler {
 	
 	public void handleItemRestore(World world, BlockPos pos) {
 		
+		
 		Set<ISaveInfo> savedInfo = getSavedInfo(world, pos);
 		if (savedInfo != null) {
 			for (ISaveInfo info: savedInfo) {
 				if (info instanceof ItemSaver) {
+					if (!ItemSprayCan.isVanillaInventory(world.getBlockState(pos).getBlock())) {
+						clearSavedInfo(world, info);
+						return;
+					}
 					ItemSaver iSaver = (ItemSaver)info;
 					TileEntity tile = world.getTileEntity(pos);
 					if (tile != null && tile instanceof TileEntityLockableLoot) {
-						if (iSaver.slot < ((TileEntityLockableLoot)tile).getSizeInventory())
+						if (iSaver.slot < ((TileEntityLockableLoot)tile).getSizeInventory() && ((TileEntityLockableLoot)tile).getStackInSlot(iSaver.slot).isEmpty() && !((TileEntityLockableLoot)tile).isLocked())
 							((TileEntityLockableLoot)tile).setInventorySlotContents(iSaver.slot, iSaver.stack);
 						clearSavedInfo(world, info);
 					}
@@ -138,6 +143,9 @@ public class OffHandler {
 						clearSavedInfo(world, info);
 					}
 				}
+				// try something different
+				else if (info instanceof ItemSaver)
+					handleItemRestore(world, pos);
 			}
 		}
 		OffWorldData.getInstance(world.provider.getDimension()).setDirty(true);

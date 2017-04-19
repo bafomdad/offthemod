@@ -1,2 +1,5 @@
 item.offthemod.spraycan.off.name=Off! The Spray Can
 item.offthemod.spraycan.on.name=On! The Spray Can
+
+tooltip.offthemod.off=Make the lag go away!
+tooltip.offthemod.on=Bring back the lag!
