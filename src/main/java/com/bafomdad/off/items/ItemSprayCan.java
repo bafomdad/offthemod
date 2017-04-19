@@ -31,6 +31,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -133,7 +134,7 @@ public class ItemSprayCan extends Item {
     	if (!(player instanceof EntityPlayer))
     		return;
     	
-    	RayTraceResult rtr = player.rayTrace(5, 5);
+    	RayTraceResult rtr = ForgeHooks.rayTraceEyes(player, 5);
     	if (rtr == null)
     		return;
     	
@@ -154,7 +155,7 @@ public class ItemSprayCan extends Item {
     			}
     			if (stack.getItemDamage() == 1 && (time != getMaxItemUseDuration(stack) && time % 5 == 0)) {
     				restoreArea(player.world, rtr.getBlockPos());
-//					All commented code on this block are the old, one-by-one item/block restoration
+//					All commented code below this line are the old, one-by-one item/block restoration
 //    				if (isVanillaInventory(player.world.getBlockState(rtr.getBlockPos()).getBlock())) {
 //    					OffHandler.getInstance().handleItemRestore(player.world, rtr.getBlockPos());
 //    					return;
