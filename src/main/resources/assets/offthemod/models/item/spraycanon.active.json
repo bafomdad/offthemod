@@ -2,6 +2,13 @@
     "textures": {
         "0": "offthemod:items/sprayon"
     },
+    "display": {
+        "gui": {
+            "rotation": [ 30, 225, 0 ],
+            "translation": [ 0, 0, 0],
+            "scale":[ 0.9375, 0.9375, 0.9375 ]
+        }
+	},
     "elements": [
         {
             "name": "Can",

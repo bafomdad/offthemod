@@ -2,6 +2,7 @@ package com.bafomdad.off;
 
 import com.bafomdad.off.proxies.CommonProxy;
 
+import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -23,9 +24,14 @@ public class OffMain {
 
     @Mod.Instance(ID)
     public static OffMain instance;
+    
+    public static OffConfig config;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+    	
+    	config = new OffConfig();
+    	config.loadConfig(event);
 
     	proxy.preInit(event);
     	proxy.initAllModels();
@@ -40,5 +46,20 @@ public class OffMain {
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
 
+    }
+    
+    public static class OffConfig {
+    	
+    	public static boolean adminsOnly;
+    	
+    	public static void loadConfig(FMLPreInitializationEvent event) {
+    		
+    		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
+    		config.load();
+    		
+    		adminsOnly = config.get("main", "makeSprayCansAdminsOnly", false, "When this config is enabled, disables crafting recipes for the spray cans.").getBoolean();
+    		
+    		config.save();
+    	}
     }
 }

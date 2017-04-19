@@ -1,5 +1,6 @@
 package com.bafomdad.off.init;
 
+import com.bafomdad.off.OffMain;
 import com.bafomdad.off.items.ItemSprayCan;
 import com.bafomdad.off.items.ItemSprayCan.SprayType;
 
@@ -32,6 +33,9 @@ public class InitItems {
 	
 	public static void initRecipes() {
 		
-		GameRegistry.addRecipe(new ItemStack(sprayCan, 1, 0), "RGR", "GNG", "RGR", 'R', new ItemStack(Items.DYE, 1, EnumDyeColor.RED.getMetadata()), 'G', Blocks.GLASS, 'N', Items.NETHER_STAR);
+		if (!OffMain.config.adminsOnly) {
+			GameRegistry.addRecipe(new ItemStack(sprayCan, 1, 0), "RGR", "GNG", "RGR", 'R', new ItemStack(Items.DYE, 1, EnumDyeColor.ORANGE.getDyeDamage()), 'G', Blocks.GLASS, 'N', Items.NETHER_STAR);
+			GameRegistry.addRecipe(new ItemStack(sprayCan, 1, 1), "RGR", "GNG", "RGR", 'R', new ItemStack(Items.DYE, 1, EnumDyeColor.GREEN.getDyeDamage()), 'G', Blocks.GLASS, 'N', Items.NETHER_STAR);
+		}
 	}
 }

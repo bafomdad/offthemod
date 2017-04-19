@@ -106,10 +106,6 @@ public class OffHandler {
 		if (savedInfo != null) {
 			for (ISaveInfo info: savedInfo) {
 				if (info instanceof ItemSaver) {
-					if (!ItemSprayCan.isVanillaInventory(world.getBlockState(pos).getBlock())) {
-						clearSavedInfo(world, info);
-						return;
-					}
 					ItemSaver iSaver = (ItemSaver)info;
 					TileEntity tile = world.getTileEntity(pos);
 					if (tile != null && tile instanceof TileEntityLockableLoot) {

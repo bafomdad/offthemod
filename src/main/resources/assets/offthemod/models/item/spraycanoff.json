@@ -2,6 +2,13 @@
     "textures": {
         "0": "offthemod:items/sprayoff"
     },
+    "display": {
+        "gui": {
+            "rotation": [ 30, 225, 0 ],
+            "translation": [ 0, 0, 0],
+            "scale":[ 0.9375, 0.9375, 0.9375 ]
+        }
+	},
 	"overrides": [
 		{ "predicate": { "spraying": 0.0000000 }, "model": "offthemod:item/spraycanoff" },
 		{ "predicate": { "spraying": 0.1000000 }, "model": "offthemod:item/spraycanon" },
