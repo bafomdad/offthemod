@@ -9,6 +9,4 @@ public interface ISaveInfo {
 	public NBTTagCompound writeNBT();
 	
 	public ISaveInfo readNBT(NBTTagCompound tag);
-	
-	public String toString();
 }

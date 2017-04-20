@@ -5,22 +5,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import com.bafomdad.off.OffMain;
-import com.bafomdad.off.data.OffHandler;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockShulkerBox;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.IItemPropertyGetter;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
@@ -31,11 +28,13 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
-import net.minecraftforge.common.ForgeHooks;
+import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraft.entity.EntityLivingBase;
+
+import com.bafomdad.off.OffMain;
+import com.bafomdad.off.data.OffHandler;
 
 public class ItemSprayCan extends Item {
 	
@@ -117,6 +116,19 @@ public class ItemSprayCan extends Item {
 		return EnumAction.DRINK;
     }
 	
+	@Override
+    public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer player, EntityLivingBase target, EnumHand hand) {
+		
+		if (!player.world.isRemote) {
+			if (!canPlayerEdit(player.world, player, stack, target.getPosition(), EnumFacing.UP))
+				return false;
+			
+			OffHandler.getInstance().handleEraseEntity(player.world, target);
+			return true;
+		}
+		return false;
+	}
+	
     @Override
 	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand) {
 		
@@ -134,13 +146,9 @@ public class ItemSprayCan extends Item {
     	if (!(player instanceof EntityPlayer))
     		return;
     	
-    	RayTraceResult rtr = ForgeHooks.rayTraceEyes(player, 5);
+    	RayTraceResult rtr = rayTrace(player.world, (EntityPlayer)player, true);
     	if (rtr == null)
     		return;
-    	
-// TODO: implement erasing entities. That'll never happen during modoff though :>
-//    	if (rtr.typeOfHit == RayTraceResult.Type.ENTITY)
-//    		System.out.println(rtr.entityHit);
     	
     	else if (rtr.typeOfHit == RayTraceResult.Type.BLOCK) {
     		if (!canPlayerEdit(player.world, (EntityPlayer)player, stack, rtr.getBlockPos(), rtr.sideHit))
@@ -172,13 +180,14 @@ public class ItemSprayCan extends Item {
     	List<BlockPos> poslist = new ArrayList<BlockPos>();
     	
     	for (BlockPos pos : BlockPos.getAllInBox(posOrigin.add(-range, -range, -range), posOrigin.add(range, range, range))) {
-    		if (world.isAirBlock(pos) || isVanillaInventory(world.getBlockState(pos).getBlock())) {
-    			poslist.add(pos);
+    		if (canReplace(world.getBlockState(pos)) || isVanillaInventory(world.getBlockState(pos).getBlock())) {
+    			if (OffHandler.getInstance().getSavedInfo(world, pos) != null) {
+    				poslist.add(pos);
+    				break;
+    			}
     		}
     	}
-    	Collections.shuffle(poslist, world.rand);
-    	int size = Math.min(poslist.size(), 32);
-    	for (int i = 0; i < size; i++) {
+    	for (int i = 0; i < poslist.size(); i++) {
     		BlockPos looppos = poslist.get(i);
     		OffHandler.getInstance().handleRestore(world, looppos);
     	}
@@ -198,5 +207,15 @@ public class ItemSprayCan extends Item {
     public static boolean isVanillaInventory(Block block) {
     	
     	return block == Blocks.DROPPER || block == Blocks.DISPENSER || block == Blocks.TRAPPED_CHEST || block == Blocks.CHEST || block == Blocks.HOPPER || block instanceof BlockShulkerBox;
+    }
+    
+    public static boolean canReplace(IBlockState state) {
+    	
+    	Block block = state.getBlock();
+    	boolean flowingwater = state.getMaterial() == Material.WATER && block.getMetaFromState(state) != 0;
+    	boolean flowinglava = state.getMaterial() == Material.LAVA && block.getMetaFromState(state) != 0;
+    	boolean flowingfluids = block instanceof BlockFluidBase && ((BlockFluidBase)block).getMetaFromState(state) != 0;
+    	
+    	return state.getMaterial() == Material.AIR || flowingwater || flowinglava || flowingfluids;
     }
 }

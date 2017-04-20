@@ -62,10 +62,4 @@ public class ItemSaver implements ISaveInfo {
 		
 		return null;
 	}
-
-	@Override
-	public String toString() {
-		
-		return "ItemSaver: " + pos.toString() + " / " + stack.toString() + " / " + slot;
-	}
 }

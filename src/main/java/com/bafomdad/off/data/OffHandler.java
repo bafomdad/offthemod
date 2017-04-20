@@ -6,22 +6,23 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.bafomdad.off.data.savers.*;
-import com.bafomdad.off.items.ItemSprayCan;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.tileentity.TileEntityLockableLoot;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandler;
+
+import com.bafomdad.off.data.savers.*;
+import com.bafomdad.off.items.ItemSprayCan;
 
 public class OffHandler {
 
@@ -64,6 +65,12 @@ public class OffHandler {
 		getSaveInfo(dimId).get(pos).add(new ItemSaver(pos, stack, slot));
 	}
 	
+	public void addEntity(int dimId, BlockPos pos, String name, NBTTagCompound tag) {
+		
+		refresh(dimId, pos);
+		getSaveInfo(dimId).get(pos).add(new EntitySaver(pos, name, tag));
+	}
+	
 	public void handleErase(World world, BlockPos pos) {
 		
 		int dimId = world.provider.getDimension();
@@ -74,15 +81,15 @@ public class OffHandler {
 				for (int i = 0; i < inv.getSizeInventory(); i++) {
 					ItemStack loopstack = inv.getStackInSlot(i);
 					if (!loopstack.isEmpty() && isModded(loopstack.getItem())) {
-						OffHandler.getInstance().addItem(dimId, pos, loopstack, i);
+						addItem(dimId, pos, loopstack, i);
 						inv.setInventorySlotContents(i, ItemStack.EMPTY);
 					}
 				}
 			}
-			OffWorldData.getInstance(world.provider.getDimension()).setDirty(true);
+			OffWorldData.getInstance(dimId).setDirty(true);
 			return;
 		}
-		if (world.isAirBlock(pos) || !isModded(world.getBlockState(pos).getBlock()))
+		if (ItemSprayCan.canReplace(world.getBlockState(pos)) || !isModded(world.getBlockState(pos).getBlock()))
 			return;
 		
 		else {
@@ -92,29 +99,63 @@ public class OffHandler {
 				tileTag = tile.writeToNBT(new NBTTagCompound());
 				world.removeTileEntity(pos);
 			}
-			OffHandler.getInstance().addBlock(dimId, pos, world.getBlockState(pos), tileTag);
+			addBlock(dimId, pos, world.getBlockState(pos), tileTag);
 			world.setBlockToAir(pos);
-			OffWorldData.getInstance(world.provider.getDimension()).setDirty(true);
+			OffWorldData.getInstance(dimId).setDirty(true);
 			return;
 		}
 	}
 	
-	public void handleItemRestore(World world, BlockPos pos) {
+	public void handleEraseEntity(World world, EntityLivingBase target) {
 		
+		int dimId = world.provider.getDimension();
+		BlockPos pos = target.getPosition();
+		if (isModded(target)) {
+			ResourceLocation res = EntityList.getKey(target);
+			NBTTagCompound tag = target.writeToNBT(new NBTTagCompound());
+			tag.setString("id", res.toString());
+			addEntity(dimId, pos, res.toString(), tag);
+			target.setDead();
+		}
+		OffWorldData.getInstance(dimId).setDirty(true);
+	}
+	
+	public void handleRestoreEntity(World world, BlockPos pos, ISaveInfo info) {
 		
-		Set<ISaveInfo> savedInfo = getSavedInfo(world, pos);
-		if (savedInfo != null) {
-			for (ISaveInfo info: savedInfo) {
-				if (info instanceof ItemSaver) {
-					ItemSaver iSaver = (ItemSaver)info;
-					TileEntity tile = world.getTileEntity(pos);
-					if (tile != null && tile instanceof TileEntityLockableLoot) {
-						if (iSaver.slot < ((TileEntityLockableLoot)tile).getSizeInventory() && ((TileEntityLockableLoot)tile).getStackInSlot(iSaver.slot).isEmpty() && !((TileEntityLockableLoot)tile).isLocked())
-							((TileEntityLockableLoot)tile).setInventorySlotContents(iSaver.slot, iSaver.stack);
-						clearSavedInfo(world, info);
-					}
-				}
+		EntitySaver eSaver = (EntitySaver)info;
+		Entity entity = EntityList.createEntityFromNBT(eSaver.nbt, world);
+		if (entity != null) {
+			NBTTagList taglist = eSaver.nbt.getTagList("Pos", 6);
+			entity.setPosition(taglist.getDoubleAt(0), taglist.getDoubleAt(1), taglist.getDoubleAt(2));
+			world.spawnEntity(entity);
+		}
+		clearSavedInfo(world, info);
+	}
+	
+	public void handleRestoreItem(World world, BlockPos pos, ISaveInfo info) {
+		
+		ItemSaver iSaver = (ItemSaver)info;
+		TileEntity tile = world.getTileEntity(pos);
+		if (tile != null && tile instanceof TileEntityLockableLoot) {
+			if (iSaver.slot < ((TileEntityLockableLoot)tile).getSizeInventory() && ((TileEntityLockableLoot)tile).getStackInSlot(iSaver.slot).isEmpty() && !((TileEntityLockableLoot)tile).isLocked())
+				((TileEntityLockableLoot)tile).setInventorySlotContents(iSaver.slot, iSaver.stack);
+			clearSavedInfo(world, info);
+		}
+	}
+	
+	public void handleRestoreBlock(World world, BlockPos pos, ISaveInfo info) {
+		
+		if (ItemSprayCan.canReplace(world.getBlockState(pos))) {
+			BlockSaver bSaver = (BlockSaver)info;
+			world.setBlockState(bSaver.pos, bSaver.state, 2);
+			if (bSaver.tiledata != null) {
+				TileEntity tile = TileEntity.create(world, bSaver.tiledata);
+				world.setTileEntity(bSaver.pos, tile);
 			}
+			clearSavedInfo(world, info);
+		}
+		else {
+			clearSavedInfo(world, info);
 		}
 	}
 	
@@ -123,25 +164,14 @@ public class OffHandler {
 		Set<ISaveInfo> savedInfo = getSavedInfo(world, pos);
 		if (savedInfo != null) {
 			for (ISaveInfo info: savedInfo) {
-				if (info instanceof BlockSaver) {
-					Block block = world.getBlockState(pos).getBlock();
-					BlockPos toPlace = null;
-					if (canReplace(block)) {
-						BlockSaver bSaver = (BlockSaver)info;
-						world.setBlockState(bSaver.pos, bSaver.state, 2);
-						if (bSaver.tiledata != null) {
-							TileEntity tile = TileEntity.create(world, bSaver.tiledata);
-							world.setTileEntity(bSaver.pos, tile);
-						}
-						clearSavedInfo(world, info);
-					}
-					else {
-						clearSavedInfo(world, info);
-					}
-				}
-				// try something different
+				if (info instanceof BlockSaver)
+					handleRestoreBlock(world, pos, info);
+				
 				else if (info instanceof ItemSaver)
-					handleItemRestore(world, pos);
+					handleRestoreItem(world, pos, info);
+				
+				else if (info instanceof EntitySaver)
+					handleRestoreEntity(world, pos, info);
 			}
 		}
 		OffWorldData.getInstance(world.provider.getDimension()).setDirty(true);
@@ -153,7 +183,6 @@ public class OffHandler {
 			return;
 		
 		for (Set<ISaveInfo> loopinfo : getSaveInfo(world.provider.getDimension()).values()) {
-			
 			Iterator<ISaveInfo> it = loopinfo.iterator();
 			while (it.hasNext()) {
 				ISaveInfo save = it.next();
@@ -173,7 +202,7 @@ public class OffHandler {
 		
 		if (world == null)
 			return null;
-		
+
 		ConcurrentHashMap<BlockPos, Set<ISaveInfo>> info = getSaveInfo(world.provider.getDimension());
 		if (info.containsKey(pos))
 			return info.get(pos);
@@ -201,12 +230,9 @@ public class OffHandler {
     		return !((Block)obj).getRegistryName().getResourceDomain().equals("minecraft");
     	if (obj instanceof Item)
     		return !((Item)obj).getRegistryName().getResourceDomain().equals("minecraft");
+    	if (obj instanceof EntityLivingBase)
+    		return !EntityList.getKey((EntityLivingBase)obj).getResourceDomain().equals("minecraft");
     	
     	return false;
-    }
-    
-    private boolean canReplace(Block block) {
-    	
-    	return block == Blocks.AIR || block == Blocks.FLOWING_WATER || block == Blocks.FLOWING_LAVA;
     }
 }

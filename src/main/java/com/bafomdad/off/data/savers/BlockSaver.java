@@ -58,10 +58,4 @@ public class BlockSaver implements ISaveInfo {
 		
 		return null;
 	}
-	
-	@Override
-	public String toString() {
-		
-		return "BlockSaver: " + pos.toString() + " / " + state.toString();
-	}
 }

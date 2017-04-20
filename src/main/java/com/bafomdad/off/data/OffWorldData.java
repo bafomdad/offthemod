@@ -44,6 +44,11 @@ public class OffWorldData extends WorldSavedData {
 					iSaver = (ItemSaver)iSaver.readNBT(saveTag);
 					OffHandler.getInstance().addItem(dimId, iSaver.pos, iSaver.stack, iSaver.slot);
 				}
+				EntitySaver eSaver = new EntitySaver();
+				if (eSaver.readNBT(saveTag) != null) {
+					eSaver = (EntitySaver)eSaver.readNBT(saveTag);
+					OffHandler.getInstance().addEntity(dimId, eSaver.pos, eSaver.name, eSaver.nbt);
+				}
 			}
 		}
 	}
