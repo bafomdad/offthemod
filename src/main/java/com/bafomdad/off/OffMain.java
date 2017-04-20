@@ -44,7 +44,10 @@ public class OffMain {
     }
 
     @Mod.EventHandler
-    public void postInit(FMLPostInitializationEvent event) {}
+    public void postInit(FMLPostInitializationEvent event) {
+    	
+    	proxy.postInit(event);
+    }
     
     public static class OffConfig {
     	

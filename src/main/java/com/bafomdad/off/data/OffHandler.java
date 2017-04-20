@@ -139,8 +139,8 @@ public class OffHandler {
 		if (tile != null && tile instanceof TileEntityLockableLoot) {
 			if (iSaver.slot < ((TileEntityLockableLoot)tile).getSizeInventory() && ((TileEntityLockableLoot)tile).getStackInSlot(iSaver.slot).isEmpty() && !((TileEntityLockableLoot)tile).isLocked())
 				((TileEntityLockableLoot)tile).setInventorySlotContents(iSaver.slot, iSaver.stack);
-			clearSavedInfo(world, info);
 		}
+		clearSavedInfo(world, info);
 	}
 	
 	public void handleRestoreBlock(World world, BlockPos pos, ISaveInfo info) {
@@ -154,9 +154,8 @@ public class OffHandler {
 			}
 			clearSavedInfo(world, info);
 		}
-		else {
+		else
 			clearSavedInfo(world, info);
-		}
 	}
 	
 	public void handleRestore(World world, BlockPos pos) {
@@ -204,7 +203,7 @@ public class OffHandler {
 			return null;
 
 		ConcurrentHashMap<BlockPos, Set<ISaveInfo>> info = getSaveInfo(world.provider.getDimension());
-		if (info.containsKey(pos))
+		if (info.containsKey(pos) && info.get(pos).size() > 0)
 			return info.get(pos);
 		
 		return null;

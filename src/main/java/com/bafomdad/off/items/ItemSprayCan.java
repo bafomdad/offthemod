@@ -1,7 +1,5 @@
 package com.bafomdad.off.items;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -120,6 +118,9 @@ public class ItemSprayCan extends Item {
     public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer player, EntityLivingBase target, EnumHand hand) {
 		
 		if (!player.world.isRemote) {
+			if (target instanceof EntityPlayer)
+				return false;
+			
 			if (!canPlayerEdit(player.world, player, stack, target.getPosition(), EnumFacing.UP))
 				return false;
 			
@@ -161,7 +162,7 @@ public class ItemSprayCan extends Item {
     				OffHandler.getInstance().handleErase(player.world, rtr.getBlockPos());
     				return;
     			}
-    			if (stack.getItemDamage() == 1 && (time != getMaxItemUseDuration(stack) && time % 5 == 0)) {
+    			if (stack.getItemDamage() == 1 && time % 5 == 0) {
     				restoreArea(player.world, rtr.getBlockPos());
 //					All commented code below this line are the old, one-by-one item/block restoration
 //    				if (isVanillaInventory(player.world.getBlockState(rtr.getBlockPos()).getBlock())) {
@@ -177,20 +178,18 @@ public class ItemSprayCan extends Item {
     private void restoreArea(World world, BlockPos posOrigin) {
     	
     	int range = 3;
-    	List<BlockPos> poslist = new ArrayList<BlockPos>();
+    	BlockPos topos = BlockPos.ORIGIN;
     	
     	for (BlockPos pos : BlockPos.getAllInBox(posOrigin.add(-range, -range, -range), posOrigin.add(range, range, range))) {
     		if (canReplace(world.getBlockState(pos)) || isVanillaInventory(world.getBlockState(pos).getBlock())) {
     			if (OffHandler.getInstance().getSavedInfo(world, pos) != null) {
-    				poslist.add(pos);
+    				topos = pos;
     				break;
     			}
     		}
     	}
-    	for (int i = 0; i < poslist.size(); i++) {
-    		BlockPos looppos = poslist.get(i);
-    		OffHandler.getInstance().handleRestore(world, looppos);
-    	}
+    	if (!topos.equals(BlockPos.ORIGIN))
+    		OffHandler.getInstance().handleRestore(world, topos);
     }
     
     private boolean canPlayerEdit(World world, EntityPlayer player, ItemStack stack, BlockPos pos, EnumFacing facing) {
