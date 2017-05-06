@@ -1,5 +1,7 @@
 package com.bafomdad.off.items;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -164,12 +166,6 @@ public class ItemSprayCan extends Item {
     			}
     			if (stack.getItemDamage() == 1 && time % 5 == 0) {
     				restoreArea(player.world, rtr.getBlockPos());
-//					All commented code below this line are the old, one-by-one item/block restoration
-//    				if (isVanillaInventory(player.world.getBlockState(rtr.getBlockPos()).getBlock())) {
-//    					OffHandler.getInstance().handleItemRestore(player.world, rtr.getBlockPos());
-//    					return;
-//    				}
-//    				OffHandler.getInstance().handleRestore(player.world, rtr.getBlockPos().offset(rtr.sideHit));
     			}
     		}
     	}
@@ -178,18 +174,19 @@ public class ItemSprayCan extends Item {
     private void restoreArea(World world, BlockPos posOrigin) {
     	
     	int range = 3;
-    	BlockPos topos = BlockPos.ORIGIN;
+    	List<BlockPos> poslist = new ArrayList<BlockPos>();
     	
     	for (BlockPos pos : BlockPos.getAllInBox(posOrigin.add(-range, -range, -range), posOrigin.add(range, range, range))) {
     		if (canReplace(world.getBlockState(pos)) || isVanillaInventory(world.getBlockState(pos).getBlock())) {
     			if (OffHandler.getInstance().getSavedInfo(world, pos) != null) {
-    				topos = pos;
-    				break;
+    				poslist.add(pos);
     			}
     		}
     	}
-    	if (!topos.equals(BlockPos.ORIGIN))
-    		OffHandler.getInstance().handleRestore(world, topos);
+    	Collections.shuffle(poslist, world.rand);
+    	if (!poslist.isEmpty()) {
+    		OffHandler.getInstance().handleRestore(world, poslist.get(0));
+    	}
     }
     
     private boolean canPlayerEdit(World world, EntityPlayer player, ItemStack stack, BlockPos pos, EnumFacing facing) {

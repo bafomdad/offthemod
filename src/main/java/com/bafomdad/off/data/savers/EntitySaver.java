@@ -57,4 +57,10 @@ public class EntitySaver implements ISaveInfo {
 		
 		return null;
 	}
+	
+	@Override
+	public BlockPos getPos() {
+		
+		return pos;
+	}
 }

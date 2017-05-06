@@ -58,4 +58,10 @@ public class BlockSaver implements ISaveInfo {
 		
 		return null;
 	}
+	
+	@Override
+	public BlockPos getPos() {
+		
+		return pos;
+	}
 }

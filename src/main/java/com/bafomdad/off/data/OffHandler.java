@@ -7,10 +7,17 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockBed;
+import net.minecraft.block.BlockBed.EnumPartType;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockDoublePlant;
+import net.minecraft.block.BlockHorizontal;
+import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -73,6 +80,7 @@ public class OffHandler {
 	
 	public void handleErase(World world, BlockPos pos) {
 		
+		OffLimiter.getInstance().checkRestoreLimit(world);
 		int dimId = world.provider.getDimension();
 		if (ItemSprayCan.isVanillaInventory(world.getBlockState(pos).getBlock())) {
 			TileEntity tile = world.getTileEntity(pos);
@@ -100,7 +108,12 @@ public class OffHandler {
 				world.removeTileEntity(pos);
 			}
 			addBlock(dimId, pos, world.getBlockState(pos), tileTag);
-			world.setBlockToAir(pos);
+			if (getMultiplaceState(world.getBlockState(pos)) != null) {
+				handleMultiplaceState(world, pos, world.getBlockState(pos), false);
+				world.setBlockState(pos, Blocks.AIR.getDefaultState(), 2);
+			}
+			else
+				world.setBlockToAir(pos);	
 			OffWorldData.getInstance(dimId).setDirty(true);
 			return;
 		}
@@ -148,6 +161,7 @@ public class OffHandler {
 		if (ItemSprayCan.canReplace(world.getBlockState(pos))) {
 			BlockSaver bSaver = (BlockSaver)info;
 			world.setBlockState(bSaver.pos, bSaver.state, 2);
+			handleMultiplaceState(world, bSaver.pos, bSaver.state, true);
 			if (bSaver.tiledata != null) {
 				TileEntity tile = TileEntity.create(world, bSaver.tiledata);
 				world.setTileEntity(bSaver.pos, tile);
@@ -156,6 +170,33 @@ public class OffHandler {
 		}
 		else
 			clearSavedInfo(world, info);
+	}
+	
+	public void handleMultiplaceState(World world, BlockPos pos, IBlockState state, boolean restore) {
+		
+		if (getMultiplaceState(state) == null)
+			return;
+		
+		PropertyEnum prop = getMultiplaceState(state);
+		String s = state.getValue(prop).toString();
+		BlockPos copypos = BlockPos.ORIGIN;
+
+		if (s.equals("lower"))
+			copypos = pos.up();
+		if (s.equals("upper"))
+			copypos = pos.down();
+		if (s.equals("head"))
+			copypos = pos.offset(state.getValue(BlockHorizontal.FACING).getOpposite());
+		if (s.equals("foot"))
+			copypos = pos.offset(state.getValue(BlockHorizontal.FACING));
+		
+		if (!copypos.equals(BlockPos.ORIGIN)) {
+			if (restore)
+				world.setBlockState(copypos, state.cycleProperty(prop), 2);
+			else
+				world.setBlockState(copypos, Blocks.AIR.getDefaultState(), 2);
+//				world.setBlockToAir(copypos);
+		}
 	}
 	
 	public void handleRestore(World world, BlockPos pos) {
@@ -221,6 +262,24 @@ public class OffHandler {
 	public Set<Integer> getUnsavedDims() {
 		
 		return saveInfo.keySet();
+	}
+	
+	private PropertyEnum getMultiplaceState(IBlockState state) {
+		
+		if (state.getProperties().isEmpty())
+			return null;
+		
+		Block block = state.getBlock();
+		if (block instanceof BlockBed)
+			return BlockBed.PART;
+		
+		if (block instanceof BlockDoor)
+			return BlockDoor.HALF;
+		
+		if (block instanceof BlockDoublePlant)
+			return BlockDoublePlant.HALF;
+		
+		return null;
 	}
 	
     private boolean isModded(Object obj) {

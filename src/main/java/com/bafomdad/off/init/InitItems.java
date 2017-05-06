@@ -1,9 +1,5 @@
 package com.bafomdad.off.init;
 
-import com.bafomdad.off.OffMain;
-import com.bafomdad.off.items.ItemSprayCan;
-import com.bafomdad.off.items.ItemSprayCan.SprayType;
-
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -14,6 +10,10 @@ import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import com.bafomdad.off.OffConfig;
+import com.bafomdad.off.items.ItemSprayCan;
+import com.bafomdad.off.items.ItemSprayCan.SprayType;
 
 public class InitItems {
 	
@@ -33,9 +33,10 @@ public class InitItems {
 	
 	public static void initRecipes() {
 		
-		if (!OffMain.config.adminsOnly) {
-			GameRegistry.addRecipe(new ItemStack(sprayCan, 1, 0), "RGR", "GNG", "RGR", 'R', new ItemStack(Items.DYE, 1, EnumDyeColor.ORANGE.getDyeDamage()), 'G', Blocks.GLASS, 'N', Items.NETHER_STAR);
-			GameRegistry.addRecipe(new ItemStack(sprayCan, 1, 1), "RGR", "GNG", "RGR", 'R', new ItemStack(Items.DYE, 1, EnumDyeColor.GREEN.getDyeDamage()), 'G', Blocks.GLASS, 'N', Items.NETHER_STAR);
+		if (!OffConfig.adminsOnly) {
+			Item core = (OffConfig.balanceRecipes) ? Items.CLAY_BALL : Items.NETHER_STAR;
+			GameRegistry.addRecipe(new ItemStack(sprayCan, 1, 0), "RGR", "GNG", "RGR", 'R', new ItemStack(Items.DYE, 1, EnumDyeColor.ORANGE.getDyeDamage()), 'G', Blocks.GLASS, 'N', core);
+			GameRegistry.addRecipe(new ItemStack(sprayCan, 1, 1), "RGR", "GNG", "RGR", 'R', new ItemStack(Items.DYE, 1, EnumDyeColor.GREEN.getDyeDamage()), 'G', Blocks.GLASS, 'N', core);
 		}
 	}
 }

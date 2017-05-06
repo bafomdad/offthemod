@@ -3,7 +3,7 @@
   "modid": "offthemod",
   "name": "Off! The Mod",
   "description": "Spray off!",
-  "version": "0.1.3",
+  "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",

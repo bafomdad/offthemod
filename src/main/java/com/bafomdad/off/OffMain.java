@@ -32,6 +32,7 @@ public class OffMain {
     	
     	config = new OffConfig();
     	config.loadConfig(event);
+		event.getModMetadata().version = VERSION;
 
     	proxy.preInit(event);
     	proxy.initAllModels();
@@ -47,20 +48,5 @@ public class OffMain {
     public void postInit(FMLPostInitializationEvent event) {
     	
     	proxy.postInit(event);
-    }
-    
-    public static class OffConfig {
-    	
-    	public static boolean adminsOnly;
-    	
-    	public static void loadConfig(FMLPreInitializationEvent event) {
-    		
-    		Configuration config = new Configuration(event.getSuggestedConfigurationFile());
-    		config.load();
-    		
-    		adminsOnly = config.get("main", "makeSprayCansAdminsOnly", false, "When this config is enabled, disables crafting recipes for the spray cans.").getBoolean();
-    		
-    		config.save();
-    	}
     }
 }
