@@ -1,6 +1,8 @@
 package com.bafomdad.off.data;
 
-import com.bafomdad.off.init.InitItems;
+
+
+import com.bafomdad.off.OffMain;
 
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.dispenser.BehaviorDefaultDispenseItem;
@@ -18,7 +20,7 @@ public class BehaviorSprayCan extends BehaviorDefaultDispenseItem {
 		World world = source.getWorld();
 		EnumFacing facing = world.getBlockState(source.getBlockPos()).getValue(BlockDispenser.FACING);
 		BlockPos pos = source.getBlockPos().offset(facing);
-		if (stack.getItem() == InitItems.sprayCan) {
+		if (stack.getItem() == OffMain.sprayCan) {
 			switch(stack.getItemDamage()) {
 				case 0: OffHandler.getInstance().handleErase(world, pos); return stack;
 				case 1: OffHandler.getInstance().handleRestore(world, pos); return stack;

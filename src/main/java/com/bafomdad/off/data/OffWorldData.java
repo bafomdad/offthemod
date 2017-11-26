@@ -6,7 +6,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldSavedData;
+import net.minecraft.world.storage.WorldSavedData;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
@@ -63,7 +63,7 @@ public class OffWorldData extends WorldSavedData {
 		
 		tag.setIntArray("savedDims", savedDims);
 		for (int d : savedDims) {
-			World world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(d);
+			World world = FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(d);
 			if (world != null) {
 				NBTTagList savedList = new NBTTagList();
 				for (ISaveInfo info : OffHandler.getInstance().getAllInfo(world)) {
@@ -78,7 +78,7 @@ public class OffWorldData extends WorldSavedData {
 	
 	public static OffWorldData getInstance(int dimId) {
 		
-		WorldServer world = FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(dimId);
+		WorldServer world = FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(dimId);
 		if (world != null) {
 			WorldSavedData handler = world.getMapStorage().getOrLoadData(OffWorldData.class, ID);
 			if (handler == null) {

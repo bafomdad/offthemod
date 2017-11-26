@@ -9,8 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
+import com.bafomdad.off.OffMain;
 import com.bafomdad.off.data.savers.PlayerSaver;
-import com.bafomdad.off.init.InitItems;
 
 public class OffPlayerHandler {
 
@@ -83,7 +83,7 @@ public class OffPlayerHandler {
 	
 	private boolean isModded(ItemStack stack) {
 		
-		if (stack.getItem() == InitItems.sprayCan)
+		if (stack.getItem() == OffMain.sprayCan)
 			return false;
 		
 		return !stack.getItem().getRegistryName().getResourceDomain().equals("minecraft");

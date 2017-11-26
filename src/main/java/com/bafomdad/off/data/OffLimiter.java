@@ -6,7 +6,7 @@ import java.util.List;
 
 import net.minecraft.world.World;
 
-import com.bafomdad.off.OffConfig;
+import com.bafomdad.off.OffMain;
 import com.bafomdad.off.data.savers.ISaveInfo;
 
 public class OffLimiter {
@@ -23,7 +23,7 @@ public class OffLimiter {
 	
 	public boolean isOffLimited() {
 		
-		return OffConfig.offlimit > 0;
+		return OffMain.OffConfig.offlimit > 0;
 	}
 	
 	public void checkRestoreLimit(World world) {
@@ -32,7 +32,7 @@ public class OffLimiter {
 			return;
 		
 		List<ISaveInfo> list = new ArrayList(OffHandler.getInstance().getAllInfo(world));
-		if (!list.isEmpty() && list.size() > OffConfig.offlimit) {
+		if (!list.isEmpty() && list.size() > OffMain.OffConfig.offlimit) {
 			ISaveInfo info = list.get(0);
 			OffHandler.getInstance().handleRestore(world, info.getPos());
 		}

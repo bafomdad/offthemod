@@ -10,6 +10,7 @@ import net.minecraft.block.BlockShulkerBox;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -58,7 +59,6 @@ public class ItemSprayCan extends Item {
 		setHasSubtypes(true);
 		setMaxStackSize(1);
 		setCreativeTab(CreativeTabs.TOOLS);
-		GameRegistry.register(this);
 		this.addPropertyOverride(new ResourceLocation("spraying"), new IItemPropertyGetter() {
 			
 			@Override
@@ -88,8 +88,9 @@ public class ItemSprayCan extends Item {
 		return getUnlocalizedName() + "." + SprayType.values()[stack.getItemDamage()].name;
 	}
 	
+	@Override
     @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack stack, EntityPlayer player, List<String> list, boolean whatisthis) {
+    public void addInformation(ItemStack stack, World player, List<String> list, ITooltipFlag whatisthis) {
     	
     	switch(stack.getItemDamage()) {
     		case 0: list.add(I18n.format("tooltip." + OffMain.ID + ".off")); return;
@@ -99,10 +100,12 @@ public class ItemSprayCan extends Item {
 	
 	@Override
 	@SideOnly(Side.CLIENT)
-	public void getSubItems(Item item, CreativeTabs tab, NonNullList<ItemStack> list) {
+	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> list) {
 		
-		list.add(new ItemStack(item, 1, 0));
-		list.add(new ItemStack(item, 1, 1));
+		if (isInCreativeTab(tab)) {
+			list.add(new ItemStack(this, 1, 0));
+			list.add(new ItemStack(this, 1, 1));
+		}
 	}
 	
     public int getMaxItemUseDuration(ItemStack stack) {
